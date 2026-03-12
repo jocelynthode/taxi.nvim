@@ -14,7 +14,7 @@ that makes your life easier. Inspired by and forked from
 
 ## Requirements
 
-- Neovim
+- Neovim 0.10+
 - `taxi` CLI in your `PATH`
 
 ## Installation
@@ -154,8 +154,9 @@ require("lualine").setup({
 
 ## Tests
 
-Tests use plenary's busted harness. If you run tests without devenv, set
-`PLENARY_PATH` to your `plenary.nvim` checkout, then run:
+Tests are split across `tests/*_spec.lua` and use plenary's busted harness.
+If you run tests without devenv, set `PLENARY_PATH` to your `plenary.nvim`
+checkout, then run:
 
 ```bash
 PLENARY_PATH=/path/to/plenary.nvim \
