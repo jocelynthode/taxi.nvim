@@ -66,6 +66,9 @@ require("taxi").setup({
     auto_update = true,
     update_debounce_ms = 200,
   },
+  commands = {
+    timeout_ms = 10000,
+  },
   completion = {
     omnifunc = "auto",
   },

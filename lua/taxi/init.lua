@@ -22,6 +22,9 @@ local default_config = {
     auto_update = true,
     update_debounce_ms = 200,
   },
+  commands = {
+    timeout_ms = 10000,
+  },
   completion = {
     omnifunc = "auto",
   },
@@ -127,17 +130,43 @@ local function jobstart_capture(cmd, on_done)
     return
   end
   local stdout = {}
+  local done = false
+  local timed_out = false
   local opts = {
     stdout_buffered = true,
     on_stdout = function(_, data)
       stdout = data
     end,
     on_exit = function(_, code)
-      on_done(code, stdout)
+      if done then
+        return
+      end
+      done = true
+      if timed_out then
+        return
+      end
+      on_done(code, stdout, false)
     end,
   }
 
-  vim.fn.jobstart(cmd, opts)
+  local job_id = vim.fn.jobstart(cmd, opts)
+  if job_id <= 0 then
+    return
+  end
+
+  local timeout_ms = config.commands.timeout_ms or 0
+  if timeout_ms > 0 then
+    vim.defer_fn(function()
+      if done then
+        return
+      end
+      done = true
+      timed_out = true
+      pcall(vim.fn.jobstop, job_id)
+      notify_timeout(cmd)
+      on_done(-1, {}, true)
+    end, timeout_ms)
+  end
 end
 
 local function resolve_cmd(cmd)
@@ -147,9 +176,23 @@ local function resolve_cmd(cmd)
   return cmd
 end
 
+local function format_cmd(cmd)
+  if type(cmd) == "string" then
+    return cmd
+  end
+  return table.concat(cmd, " ")
+end
+
+local function notify_timeout(cmd)
+  vim.notify("taxi command timed out: " .. format_cmd(cmd), vim.log.levels.WARN, { title = "taxi" })
+end
+
 local function update_aliases()
   updated_aliases = {}
-  jobstart_capture({ "taxi", "alias", "list", "--no-inactive" }, function(code, stdout)
+  jobstart_capture({ "taxi", "alias", "list", "--no-inactive" }, function(code, stdout, timed_out)
+    if timed_out then
+      return
+    end
     if code ~= 0 then
       return
     end
@@ -176,7 +219,10 @@ local function schedule_alias_update()
 
   vim.defer_fn(function()
     alias_update_pending = false
-    jobstart_capture({ "taxi", "update" }, function(code)
+    jobstart_capture({ "taxi", "update" }, function(code, _, timed_out)
+      if timed_out then
+        return
+      end
       if code == 0 then
         update_aliases()
       end
@@ -270,6 +316,7 @@ function M.show_balance()
   balance_seq = balance_seq + 1
   local seq = balance_seq
   local stdout = {}
+  local done = false
 
   if balance_job_id then
     pcall(vim.fn.jobstop, balance_job_id)
@@ -277,7 +324,9 @@ function M.show_balance()
   end
 
   balance_inflight = true
-  balance_job_id = vim.fn.jobstart(resolve_cmd(config.balance.cmd), {
+  local balance_cmd = resolve_cmd(config.balance.cmd)
+  local timeout_ms = config.commands.timeout_ms or 0
+  balance_job_id = vim.fn.jobstart(balance_cmd, {
     stdout_buffered = true,
     on_stdout = function(_, data)
       if seq ~= balance_seq then
@@ -286,6 +335,10 @@ function M.show_balance()
       stdout = data
     end,
     on_exit = function(_, code)
+      if done then
+        return
+      end
+      done = true
       if seq ~= balance_seq then
         return
       end
@@ -324,6 +377,22 @@ function M.show_balance()
       vim.cmd("wincmd k")
     end,
   })
+
+  if balance_job_id > 0 and timeout_ms > 0 then
+    vim.defer_fn(function()
+      if done then
+        return
+      end
+      done = true
+      if seq ~= balance_seq then
+        return
+      end
+      pcall(vim.fn.jobstop, balance_job_id)
+      balance_job_id = nil
+      balance_inflight = false
+      notify_timeout(balance_cmd)
+    end, timeout_ms)
+  end
 
   if balance_job_id <= 0 then
     balance_job_id = nil
