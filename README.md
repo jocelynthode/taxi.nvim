@@ -107,7 +107,24 @@ require("taxi").setup({
 })
 ```
 
-By default, `omnifunc = "auto"` disables omnifunc when `blink.cmp` is installed.
+By default, `omnifunc = "auto"` disables omnifunc when `blink.cmp` or `nvim-cmp`
+is installed.
+
+## nvim-cmp
+
+Register the taxi source:
+
+```lua
+local cmp = require("cmp")
+
+cmp.register_source("taxi", require("taxi.cmp").new())
+
+cmp.setup({
+  sources = cmp.config.sources({
+    { name = "taxi" },
+  }),
+})
+```
 
 ## Commands
 

@@ -37,7 +37,7 @@ local config = vim.deepcopy(default_config)
 
 local function should_use_omnifunc()
   if config.completion.omnifunc == "auto" then
-    return not pcall(require, "blink.cmp")
+    return not pcall(require, "blink.cmp") and not pcall(require, "cmp")
   end
   return config.completion.omnifunc == true
 end
