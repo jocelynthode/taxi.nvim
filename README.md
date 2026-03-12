@@ -24,14 +24,14 @@ Install with your plugin manager of choice:
 ```lua
 -- lazy.nvim
 {
-  "yourname/taxi.nvim",
+  "jocelynthode/taxi.nvim",
   ft = "taxi",
 }
 ```
 
 ```lua
 -- packer.nvim
-use({ "yourname/taxi.nvim", ft = "taxi" })
+use({ "jocelynthode/taxi.nvim", ft = "taxi" })
 ```
 
 ## Usage
@@ -41,12 +41,14 @@ Open a `.tks` file. The plugin:
 - Sets `filetype=taxi`
 - Runs alias updates in the background
 - Formats entries on save
-- Shows the balance in a scratch window after save
+- Shows a balance notification after save (or a scratch window if configured)
 
 ### Alias completion
 
-Use omni completion (`<c-x><c-o>`) to complete aliases. When you start a
-new line at column 1, omni completion is triggered automatically.
+If you use omni completion, press `<c-x><c-o>` to complete aliases. When you
+start a new line at column 1, omni completion is triggered automatically.
+Omni completion is enabled by default unless `blink.cmp` or `nvim-cmp` is
+installed; configure `completion.omnifunc` to override.
 
 ## Configuration
 
@@ -57,21 +59,21 @@ require("taxi").setup({
   balance = {
     enabled = true,
     cmd = { "taxi", "zebra", "balance" },
-    mode = "notify",
+    mode = "notify", -- "notify" | "scratch"
   },
   cache = {
     path = vim.fn.stdpath("data") .. "/taxi/taxi_aliases",
   },
   aliases = {
-    auto_update = true,
-    update_debounce_ms = 200,
-    notify_on_update = true,
+    auto_update = true, -- true | false
+    update_debounce_ms = 200, -- number (ms)
+    notify_on_update = true, -- true | false
   },
   commands = {
-    timeout_ms = 10000,
+    timeout_ms = 10000, -- number (ms), 0 disables
   },
   completion = {
-    omnifunc = "auto",
+    omnifunc = "auto", -- "auto" | true | false
   },
 })
 ```
@@ -152,13 +154,14 @@ require("lualine").setup({
 
 ## Tests
 
-Tests use plenary's busted harness. Set `PLENARY_PATH` to your
-`plenary.nvim` checkout, then run:
+Tests use plenary's busted harness. If you run tests without devenv, set
+`PLENARY_PATH` to your `plenary.nvim` checkout, then run:
 
 ```bash
 PLENARY_PATH=/path/to/plenary.nvim \
   nvim --headless -u tests/minimal_init.lua \
-  -c "PlenaryBustedDirectory tests/ { minimal_init = './tests/minimal_init.lua' }"
+  -c "PlenaryBustedDirectory tests/ { minimal_init = './tests/minimal_init.lua' }" \
+  -c "qa"
 ```
 
 ### Devenv
