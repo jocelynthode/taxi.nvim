@@ -8,6 +8,7 @@ local alias_update_pending = false
 local balance_job_id = nil
 local balance_seq = 0
 local balance_inflight = false
+local commands_registered = false
 
 local default_config = {
   balance = {
@@ -21,6 +22,7 @@ local default_config = {
   aliases = {
     auto_update = true,
     update_debounce_ms = 200,
+    notify_on_update = true,
   },
   commands = {
     timeout_ms = 10000,
@@ -221,20 +223,39 @@ local function schedule_alias_update()
 
   vim.defer_fn(function()
     alias_update_pending = false
-    jobstart_capture({ "taxi", "update" }, function(code, _, timed_out)
-      if timed_out then
-        return
-      end
-      if code == 0 then
-        update_aliases()
-      end
-    end)
+    run_alias_update()
   end, delay)
+end
+
+local function run_alias_update()
+  if not config.aliases.auto_update then
+    return
+  end
+
+  jobstart_capture({ "taxi", "update" }, function(code, stdout, timed_out)
+    if timed_out then
+      return
+    end
+    if code == 0 then
+      if config.aliases.notify_on_update then
+        local message = "taxi update completed"
+        if stdout and #stdout > 0 then
+          message = table.concat(stdout, "\n")
+        end
+        vim.notify(message, vim.log.levels.INFO, { title = "taxi" })
+      end
+      update_aliases()
+    end
+  end)
 end
 
 function M.assemble_aliases()
   read_aliases()
   schedule_alias_update()
+end
+
+function M.update_now()
+  run_alias_update()
 end
 
 function M.complete(findstart, base)
@@ -467,8 +488,24 @@ function M.setup_buffer()
   M.assemble_aliases()
 end
 
+local function setup_commands()
+  if commands_registered then
+    return
+  end
+  commands_registered = true
+
+  vim.api.nvim_create_user_command("TaxiUpdate", function()
+    M.update_now()
+  end, {})
+
+  vim.api.nvim_create_user_command("TaxiBalance", function()
+    M.show_balance()
+  end, {})
+end
+
 function M.setup(opts)
   config = vim.tbl_deep_extend("force", vim.deepcopy(default_config), opts or {})
+  setup_commands()
 end
 
 function M.get_cached_aliases()

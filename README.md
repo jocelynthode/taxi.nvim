@@ -65,6 +65,7 @@ require("taxi").setup({
   aliases = {
     auto_update = true,
     update_debounce_ms = 200,
+    notify_on_update = true,
   },
   commands = {
     timeout_ms = 10000,
@@ -107,6 +108,11 @@ require("taxi").setup({
 ```
 
 By default, `omnifunc = "auto"` disables omnifunc when `blink.cmp` is installed.
+
+## Commands
+
+- `:TaxiUpdate` to run `taxi update` and refresh alias cache
+- `:TaxiBalance` to show the current balance
 
 ## Lualine
 
