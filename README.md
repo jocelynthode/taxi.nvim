@@ -127,6 +127,25 @@ require("lualine").setup({
 })
 ```
 
+## Tests
+
+Tests use plenary's busted harness. Set `PLENARY_PATH` to your
+`plenary.nvim` checkout, then run:
+
+```bash
+PLENARY_PATH=/path/to/plenary.nvim \
+  nvim --headless -u tests/minimal_init.lua \
+  -c "PlenaryBustedDirectory tests/ { minimal_init = './tests/minimal_init.lua' }"
+```
+
+### Devenv
+
+If you use devenv.sh, run tests via:
+
+```bash
+devenv test
+```
+
 ## Cache
 
 Alias data is cached in `stdpath('data') .. '/taxi/taxi_aliases'` for faster
