@@ -1,5 +1,6 @@
 local config = require("taxi.config")
 local system = require("taxi.system")
+local status = require("taxi.status")
 
 local M = {}
 
@@ -47,13 +48,17 @@ function M.show_balance()
       end
 
       local balance = stdout or {}
-      if code ~= 0 or #balance == 0 then
+      local balance_failed = code ~= 0 or #balance == 0
+      if balance_failed then
         balance = { "Could not read the balance" }
       end
 
       if config.get().balance.mode == "notify" then
-        local level = code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
+        local level = balance_failed and vim.log.levels.WARN or vim.log.levels.INFO
         system.notify(table.concat(balance, "\n"), level)
+        if balance_failed then
+          status.show_status({ level = vim.log.levels.ERROR })
+        end
         return
       end
 

@@ -132,6 +132,7 @@ cmp.setup({
 
 - `:TaxiUpdate` to run `taxi update` and refresh alias cache
 - `:TaxiBalance` to show the current balance
+- `:TaxiStatus` to show the current status
 
 ## Lualine
 

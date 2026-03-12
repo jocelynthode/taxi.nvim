@@ -41,9 +41,12 @@ function M.new_stubber()
     end)
   end
 
-  local function stub_notify_store(messages)
-    add_stub(vim, "notify", function(msg)
+  local function stub_notify_store(messages, levels)
+    add_stub(vim, "notify", function(msg, level)
       table.insert(messages, msg)
+      if levels then
+        table.insert(levels, level)
+      end
     end)
   end
 

@@ -1,5 +1,6 @@
 local aliases = require("taxi.aliases")
 local balance = require("taxi.balance")
+local status = require("taxi.status")
 local config = require("taxi.config")
 local format = require("taxi.format")
 
@@ -32,6 +33,10 @@ function M.setup_commands()
 
   vim.api.nvim_create_user_command("TaxiBalance", function()
     balance.show_balance()
+  end, {})
+
+  vim.api.nvim_create_user_command("TaxiStatus", function()
+    status.show_status()
   end, {})
 end
 

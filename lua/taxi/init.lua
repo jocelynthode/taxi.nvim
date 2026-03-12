@@ -3,6 +3,7 @@ local balance = require("taxi.balance")
 local commands = require("taxi.commands")
 local config = require("taxi.config")
 local format = require("taxi.format")
+local status = require("taxi.status")
 
 local M = {}
 
@@ -37,6 +38,12 @@ end
 ---Close the balance scratch window if present.
 function M.balance_close()
   balance.balance_close()
+end
+
+---Show the current taxi status via notification.
+---@param opts table|nil
+function M.show_status(opts)
+  status.show_status(opts)
 end
 
 ---Trigger omni completion on first column insert.

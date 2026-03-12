@@ -69,4 +69,33 @@ describe("taxi balance", function()
     local buf = vim.fn.bufnr("^_taxibalance$")
     assert.is_true(buf > 0)
   end)
+
+  it("runs status when balance fails", function()
+    local notifications = {}
+    local levels = {}
+    stubber.stub_notify_store(notifications, levels)
+    stubber.stub_executable(1)
+    stubber.stub_system(function(cmd, _, on_exit)
+      if cmd[2] == "zebra" then
+        on_exit({ code = 1, stdout = "" })
+        return { kill = function() end }
+      end
+      if cmd[2] == "status" then
+        on_exit({ code = 0, stdout = "Status OK" })
+        return { kill = function() end }
+      end
+      return { kill = function() end }
+    end)
+
+    taxi.setup({
+      balance = { enabled = true, mode = "notify" },
+      commands = { timeout_ms = 0 },
+    })
+
+    taxi.show_balance()
+
+    assert.equals("Could not read the balance", notifications[1])
+    assert.equals("Status OK", notifications[2])
+    assert.equals(vim.log.levels.ERROR, levels[2])
+  end)
 end)
