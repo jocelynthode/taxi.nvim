@@ -152,6 +152,12 @@ If you use devenv.sh, run tests via:
 devenv test
 ```
 
+If the TUI hides test output, add `--no-tui`:
+
+```bash
+devenv test --no-tui
+```
+
 ## Cache
 
 Alias data is cached in `stdpath('data') .. '/taxi/taxi_aliases'` for faster

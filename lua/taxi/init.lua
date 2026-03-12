@@ -9,6 +9,7 @@ local balance_job_id = nil
 local balance_seq = 0
 local balance_inflight = false
 local commands_registered = false
+local run_alias_update
 
 local default_config = {
   balance = {
@@ -227,7 +228,7 @@ local function schedule_alias_update()
   end, delay)
 end
 
-local function run_alias_update()
+run_alias_update = function()
   if not config.aliases.auto_update then
     return
   end
@@ -401,7 +402,7 @@ function M.show_balance()
     end,
   })
 
-  if balance_job_id > 0 and timeout_ms > 0 then
+  if balance_job_id and balance_job_id > 0 and timeout_ms > 0 then
     vim.defer_fn(function()
       if done then
         return
@@ -417,7 +418,7 @@ function M.show_balance()
     end, timeout_ms)
   end
 
-  if balance_job_id <= 0 then
+  if not balance_job_id or balance_job_id <= 0 then
     balance_job_id = nil
     balance_inflight = false
   end
