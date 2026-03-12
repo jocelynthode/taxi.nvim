@@ -19,7 +19,7 @@ end
 ---@param _ table
 ---@param callback fun(response: table)
 function source:get_completions(_, callback)
-  local aliases = require("taxi").get_cached_aliases()
+  local aliases = require("taxi.aliases").get_cached_aliases()
   local items = {}
   local kind = require("blink.cmp.types").CompletionItemKind.Text
 

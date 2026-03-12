@@ -1,5 +1,6 @@
 local helpers = require("helpers")
 local taxi = require("taxi")
+local balance = require("taxi.balance")
 
 describe("taxi balance", function()
   local stubber
@@ -97,5 +98,50 @@ describe("taxi balance", function()
     assert.equals("Could not read the balance", notifications[1])
     assert.equals("Status OK", notifications[2])
     assert.equals(vim.log.levels.ERROR, levels[2])
+  end)
+
+  it("still shows balance after balance_close", function()
+    local notifications = {}
+    local calls = 0
+    stubber.stub_notify_store(notifications)
+    stubber.stub_executable(1)
+    stubber.stub_system(function(_, _, on_exit)
+      calls = calls + 1
+      on_exit({ code = 0, stdout = "Balance OK" })
+      return { kill = function() end }
+    end)
+
+    taxi.setup({
+      balance = { enabled = true, mode = "notify" },
+      commands = { timeout_ms = 0 },
+    })
+
+    taxi.show_balance()
+    balance.balance_close()
+    taxi.show_balance()
+
+    assert.equals(2, calls)
+    assert.equals("Balance OK", notifications[1])
+    assert.equals("Balance OK", notifications[2])
+  end)
+
+  it("closes the scratch balance buffer", function()
+    stubber.stub_executable(1)
+    stubber.stub_system(function(_, _, on_exit)
+      on_exit({ code = 0, stdout = "Balance OK" })
+      return { kill = function() end }
+    end)
+
+    taxi.setup({
+      balance = { enabled = true, mode = "scratch" },
+      commands = { timeout_ms = 0 },
+    })
+
+    taxi.show_balance()
+    assert.is_true(vim.fn.bufnr("^_taxibalance$") > 0)
+
+    balance.balance_close()
+
+    assert.equals(-1, vim.fn.bufnr("^_taxibalance$"))
   end)
 end)

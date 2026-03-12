@@ -1,5 +1,6 @@
 local helpers = require("helpers")
 local taxi = require("taxi")
+local commands = require("taxi.commands")
 
 describe("taxi omnifunc", function()
   local stubber
@@ -24,7 +25,7 @@ describe("taxi omnifunc", function()
 
     local buf = orig_create_buf(false, true)
     orig_set_current(buf)
-    taxi.setup_buffer()
+    commands.setup_buffer()
 
     assert.is_true(vim.bo[buf].omnifunc == "")
   end)
@@ -44,7 +45,7 @@ describe("taxi omnifunc", function()
 
     local buf = orig_create_buf(false, true)
     orig_set_current(buf)
-    taxi.setup_buffer()
+    commands.setup_buffer()
 
     assert.is_true(vim.bo[buf].omnifunc == "")
   end)

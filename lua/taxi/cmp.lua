@@ -22,7 +22,7 @@ end
 ---@param params table
 ---@param callback fun(response: table)
 function source:complete(params, callback)
-  local aliases = require("taxi").get_cached_aliases()
+  local aliases = require("taxi.aliases").get_cached_aliases()
   local items = {}
 
   for _, alias in ipairs(aliases) do

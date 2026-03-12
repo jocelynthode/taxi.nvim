@@ -1,3 +1,1 @@
-local taxi = require("taxi")
-
-taxi.setup_buffer()
+require("taxi.commands").setup_buffer()

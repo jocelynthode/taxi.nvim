@@ -1,5 +1,6 @@
 local helpers = require("helpers")
 local taxi = require("taxi")
+local aliases = require("taxi.aliases")
 
 describe("taxi aliases", function()
   local stubber
@@ -85,8 +86,8 @@ describe("taxi aliases", function()
       commands = { timeout_ms = 0 },
     })
 
-    taxi.assemble_aliases()
-    local cached = taxi.get_cached_aliases()
+    aliases.assemble_aliases()
+    local cached = aliases.get_cached_aliases()
     assert.equals("t1", cached[1][1])
   end)
 
@@ -153,7 +154,7 @@ describe("taxi aliases", function()
       commands = { timeout_ms = 0 },
     })
 
-    taxi.assemble_aliases()
+    aliases.assemble_aliases()
 
     assert.is_false(taxi.is_alias_update_inflight())
   end)

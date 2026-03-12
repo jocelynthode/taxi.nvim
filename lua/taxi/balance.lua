@@ -4,8 +4,6 @@ local status = require("taxi.status")
 
 local M = {}
 
-local is_closing = false
-
 local state = {
   job_id = nil,
   seq = 0,
@@ -19,10 +17,6 @@ function M.show_balance()
   end
 
   if not system.ensure_taxi_available() then
-    return
-  end
-
-  if is_closing then
     return
   end
 
@@ -100,7 +94,6 @@ end
 
 ---Close the balance scratch window if present.
 function M.balance_close()
-  is_closing = true
   state.seq = state.seq + 1
   if state.job_id and state.job_id.kill then
     pcall(state.job_id.kill, state.job_id, 15)
