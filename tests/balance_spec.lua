@@ -6,6 +6,9 @@ describe("taxi balance", function()
 
   before_each(function()
     stubber = helpers.new_stubber()
+    stubber.stub_schedule(function(fn)
+      fn()
+    end)
   end)
 
   after_each(function()

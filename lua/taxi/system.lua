@@ -81,7 +81,9 @@ function M.start_job(cmd, opts)
       output = vim.split(result.stdout, "\n", { trimempty = true })
     end
     if on_exit then
-      on_exit(result.code or 0, output, false)
+      vim.schedule(function()
+        on_exit(result.code or 0, output, false)
+      end)
     end
   end)
 

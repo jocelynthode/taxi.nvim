@@ -57,6 +57,12 @@ function M.new_stubber()
     add_stub(_G, "pcall", handler)
   end
 
+  local function stub_schedule(handler)
+    add_stub(vim, "schedule", function(fn)
+      return handler(fn)
+    end)
+  end
+
   return {
     add_stub = add_stub,
     revert_all = revert_all,
@@ -65,6 +71,7 @@ function M.new_stubber()
     stub_notify_store = stub_notify_store,
     stub_system = stub_system,
     stub_pcall = stub_pcall,
+    stub_schedule = stub_schedule,
   }
 end
 
