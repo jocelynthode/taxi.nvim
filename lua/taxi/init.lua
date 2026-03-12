@@ -56,6 +56,8 @@ local function ensure_taxi_available()
   return false
 end
 
+local notify_timeout
+
 local function parse_alias_line(line)
   local parts = vim.split(line, "%s+", { trimempty = true })
   if #parts > 2 then
@@ -183,7 +185,7 @@ local function format_cmd(cmd)
   return table.concat(cmd, " ")
 end
 
-local function notify_timeout(cmd)
+notify_timeout = function(cmd)
   vim.notify("taxi command timed out: " .. format_cmd(cmd), vim.log.levels.WARN, { title = "taxi" })
 end
 
