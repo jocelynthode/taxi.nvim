@@ -1,4 +1,5 @@
 local M = {}
+local unpack = table.unpack or unpack
 
 ---Pad a string to a minimum length with taxi formatting.
 ---@param value string

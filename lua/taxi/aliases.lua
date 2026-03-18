@@ -15,11 +15,24 @@ local state = {
 ---@param line string
 ---@return table|nil
 local function parse_alias_line(line)
-  local parts = vim.split(line, "%s+", { trimempty = true })
-  if #parts > 2 then
-    local alias = parts[2]
-    local text = table.concat(parts, " ", 4)
-    return { alias, text }
+  local value = vim.trim(line)
+  if value == "" then
+    return nil
+  end
+
+  local alias, text = value:match("^%[[^%]]+%]%s+([^%s]+)%s*%-%>%s*(.+)$")
+  if alias and text then
+    return { alias, vim.trim(text) }
+  end
+
+  alias, text = value:match("^([^%s]+)%s*%-%>%s*(.+)$")
+  if alias and text then
+    return { alias, vim.trim(text) }
+  end
+
+  alias, text = value:match("^%S+%s+([^%s]+)%s+(.+)$")
+  if alias and text then
+    return { alias, vim.trim(text) }
   end
 end
 

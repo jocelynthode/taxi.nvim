@@ -43,12 +43,17 @@ Open a `.tks` file. The plugin:
 - Formats entries on save
 - Shows a balance notification after save (or a scratch window if configured)
 
+Commands are available after `require("taxi").setup()` runs. If you lazy-load
+on filetype and do not call `setup()`, they are still registered when the first
+`taxi` buffer opens.
+
 ### Alias completion
 
-If you use omni completion, press `<c-x><c-o>` to complete aliases. When you
-start a new line at column 1, omni completion is triggered automatically.
-Omni completion is enabled by default unless `blink.cmp` or `nvim-cmp` is
-installed; configure `completion.omnifunc` to override.
+Press `<c-x><c-o>` to complete aliases via omnifunc. On a new line at column
+1, completion is triggered automatically.
+
+Omnifunc defaults to `"auto"`: enabled unless `blink.cmp` or `nvim-cmp` is
+installed. Override with `completion.omnifunc`.
 
 ## Configuration
 
@@ -77,6 +82,13 @@ require("taxi").setup({
   },
 })
 ```
+
+### Validation behavior
+
+- Unknown config keys are rejected.
+- `balance.mode` must be `"notify"` or `"scratch"`.
+- `commands.timeout_ms` and `aliases.update_debounce_ms` must be `>= 0`.
+- `completion.omnifunc` is normalized to one of `"auto"`, `true`, or `false`.
 
 ## blink-cmp
 
@@ -109,9 +121,6 @@ require("taxi").setup({
 })
 ```
 
-By default, `omnifunc = "auto"` disables omnifunc when `blink.cmp` or `nvim-cmp`
-is installed.
-
 ## nvim-cmp
 
 Register the taxi source:
@@ -133,6 +142,8 @@ cmp.setup({
 - `:TaxiUpdate` to run `taxi update` and refresh alias cache
 - `:TaxiBalance` to show the current balance
 - `:TaxiStatus` to show the current status
+
+Run `:checkhealth taxi` for diagnostics.
 
 ## Lualine
 
@@ -180,7 +191,21 @@ If the TUI hides test output, add `--no-tui`:
 devenv test --no-tui
 ```
 
-## Cache
+## Troubleshooting
 
-Alias data is cached in `stdpath('data') .. '/taxi/taxi_aliases'` for faster
-startup and refreshed asynchronously after opening a taxi file.
+- `taxi executable not found in PATH`: install the `taxi` CLI and ensure it is
+  available in your shell `PATH`.
+- Timeout notifications (`taxi command timed out`): increase
+  `commands.timeout_ms` or set it to `0` to disable command timeouts.
+- Cache issues: default cache path is
+  `stdpath("data") .. "/taxi/taxi_aliases"`; check `cache.path` and run
+  `:checkhealth taxi` to verify the cache directory is writable.
+
+## Help docs
+
+This plugin ships Vim help at `doc/taxi.txt`. For local development, regenerate
+help tags after doc changes:
+
+```vim
+:helptags doc
+```

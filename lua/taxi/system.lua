@@ -102,7 +102,9 @@ function M.start_job(cmd, opts)
         on_timeout()
       end
       if on_exit then
-        on_exit(-1, {}, true)
+        vim.schedule(function()
+          on_exit(-1, {}, true)
+        end)
       end
     end, timeout_ms)
   end

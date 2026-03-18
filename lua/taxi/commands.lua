@@ -8,6 +8,16 @@ local M = {}
 
 local commands_registered = false
 
+local function has_completeopt(value)
+  local options = vim.opt_local.completeopt:get()
+  for _, option in ipairs(options) do
+    if option == value then
+      return true
+    end
+  end
+  return false
+end
+
 ---Trigger omni completion on first column insert.
 function M.insert_enter()
   if not config.should_use_omnifunc() then
@@ -45,7 +55,9 @@ function M.setup_buffer()
   M.setup_commands()
   if config.should_use_omnifunc() then
     vim.bo.omnifunc = "v:lua.require'taxi'.complete"
-    vim.opt_local.completeopt:append("longest")
+    if not has_completeopt("longest") then
+      vim.opt_local.completeopt:append("longest")
+    end
   end
 
   local buf = vim.api.nvim_get_current_buf()

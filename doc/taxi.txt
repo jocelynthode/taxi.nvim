@@ -1,0 +1,216 @@
+*taxi.txt*            For NVIM v0.10+             Last change: 2026 March 18
+
+Neovim plugin for the taxi CLI                                  *taxi.nvim*
+
+===============================================================================
+CONTENTS                                                        *taxi-contents*
+
+1. Requirements.................................................|taxi-requirements|
+2. Setup........................................................|taxi-setup|
+3. Commands.....................................................|taxi-commands|
+4. Options......................................................|taxi-options|
+5. Completion...................................................|taxi-completion|
+6. Cache........................................................|taxi-cache|
+7. Health.......................................................|taxi-health|
+8. See Also.....................................................|taxi-see-also|
+
+===============================================================================
+REQUIREMENTS                                                    *taxi-requirements*
+
+- Neovim 0.10+
+- `taxi` executable in your `PATH`
+
+===============================================================================
+SETUP                                                           *taxi-setup*
+
+Call `setup()` once during startup:
+
+>lua
+  require("taxi").setup()
+<
+
+With custom options:
+
+>lua
+  require("taxi").setup({
+    balance = { mode = "scratch" },
+    completion = { omnifunc = false },
+  })
+<
+
+Lazy-loading note:
+
+- Commands are registered as soon as `require("taxi").setup()` is called.
+- If you do not call `setup()`, opening a `taxi` file still initializes the
+  plugin through `ftplugin/taxi.lua` and registers commands at that time.
+
+===============================================================================
+COMMANDS                                                       *taxi-commands*
+
+                                                *:TaxiUpdate* *:TaxiBalance* *:TaxiStatus*
+
+- `:TaxiUpdate`
+    Run `taxi update`, then refresh alias cache from `taxi alias list`.
+
+- `:TaxiBalance`
+    Show `taxi zebra balance` output using notification or scratch mode.
+
+- `:TaxiStatus`
+    Show `taxi status` output as a notification.
+
+===============================================================================
+OPTIONS                                                         *taxi-options*
+
+`require("taxi").setup({ ... })`
+
+Default values:
+
+>lua
+  {
+    balance = {
+      enabled = true,
+      cmd = { "taxi", "zebra", "balance" },
+      mode = "notify", -- "notify" | "scratch"
+    },
+    cache = {
+      path = vim.fn.stdpath("data") .. "/taxi/taxi_aliases",
+    },
+    aliases = {
+      auto_update = true,
+      update_debounce_ms = 200,
+      notify_on_update = true,
+    },
+    commands = {
+      timeout_ms = 10000, -- 0 disables timeout
+    },
+    completion = {
+      omnifunc = "auto", -- "auto" | true | false
+    },
+  }
+<
+
+Validation:
+
+- Unknown option keys are rejected.
+- `balance.mode` must be `"notify"` or `"scratch"`.
+- `commands.timeout_ms` must be `>= 0`.
+- `aliases.update_debounce_ms` must be `>= 0`.
+- `completion.omnifunc` is normalized to one of `"auto"`, `true`, `false`.
+
+Option tags:
+
+- `balance.enabled`................................|taxi-option-balance-enabled|
+- `balance.cmd`........................................|taxi-option-balance-cmd|
+- `balance.mode`......................................|taxi-option-balance-mode|
+- `cache.path`..........................................|taxi-option-cache-path|
+- `aliases.auto_update`........................|taxi-option-aliases-auto-update|
+- `aliases.update_debounce_ms`................|taxi-option-aliases-update-debounce-ms|
+- `aliases.notify_on_update`..................|taxi-option-aliases-notify-on-update|
+- `commands.timeout_ms`............................|taxi-option-commands-timeout-ms|
+- `completion.omnifunc`..........................|taxi-option-completion-omnifunc|
+
+                                                        *taxi-option-balance-enabled*
+`balance.enabled`
+    Enable/disable automatic balance display on save.
+
+                                                        *taxi-option-balance-cmd*
+`balance.cmd`
+    Command passed to `vim.system()` for balance retrieval.
+
+                                                        *taxi-option-balance-mode*
+`balance.mode`
+    Where to display balance output. One of `"notify"` or `"scratch"`.
+
+                                                        *taxi-option-cache-path*
+`cache.path`
+    File path for persisted alias cache.
+
+                                                        *taxi-option-aliases-auto-update*
+`aliases.auto_update`
+    Run `taxi update` automatically after opening a taxi buffer.
+
+                                                        *taxi-option-aliases-update-debounce-ms*
+`aliases.update_debounce_ms`
+    Debounce delay (ms) before auto update. Must be `>= 0`.
+
+                                                        *taxi-option-aliases-notify-on-update*
+`aliases.notify_on_update`
+    Show notification when `taxi update` succeeds.
+
+                                                        *taxi-option-commands-timeout-ms*
+`commands.timeout_ms`
+    Command timeout in milliseconds. Set `0` to disable timeout.
+
+                                                        *taxi-option-completion-omnifunc*
+`completion.omnifunc`
+    Completion mode: `"auto"`, `true`, or `false`.
+
+===============================================================================
+COMPLETION                                                   *taxi-completion*
+
+Omnifunc:
+
+- `omnifunc = "auto"` enables omnifunc unless `blink.cmp` or `nvim-cmp` is
+  detected.
+- `omnifunc = true` always enables taxi omnifunc.
+- `omnifunc = false` disables taxi omnifunc.
+
+Use omni completion with `<C-x><C-o>`.
+
+`blink.cmp` integration:
+
+>lua
+  require("blink.cmp").setup({
+    sources = {
+      providers = {
+        taxi = {
+          name = "Taxi",
+          module = "taxi.blink",
+        },
+      },
+      per_filetype = {
+        taxi = { "taxi" },
+      },
+    },
+  })
+<
+
+`nvim-cmp` integration:
+
+>lua
+  local cmp = require("cmp")
+
+  cmp.register_source("taxi", require("taxi.cmp").new())
+<
+
+===============================================================================
+CACHE                                                             *taxi-cache*
+
+Alias cache path defaults to:
+
+  `stdpath("data") .. "/taxi/taxi_aliases"`
+
+Change it with `cache.path`.
+
+===============================================================================
+HEALTH                                                           *taxi-health*
+
+Use `:checkhealth taxi` to inspect plugin status. It reports:
+
+- Neovim version support
+- `taxi` executable availability
+- cache path writability
+- current config summary (`balance.mode`, timeout, omnifunc)
+
+===============================================================================
+SEE ALSO                                                     *taxi-see-also*
+
+- `:help taxi-setup`
+- `:help taxi-options`
+- `:help taxi-completion`
+- `:help :TaxiUpdate`
+- `:help :TaxiBalance`
+- `:help :TaxiStatus`
+- `:help health`
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

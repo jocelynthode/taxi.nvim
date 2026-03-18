@@ -65,6 +65,76 @@ describe("taxi aliases", function()
     assert.equals("1000/2000 (Client A - Analytics 2026, Product campaign (PROJ-2010))", matches[1].menu)
   end)
 
+  it("parses alias output variants and skips malformed lines", function()
+    stubber.stub_executable(1)
+    stubber.stub_defer_immediate()
+    stubber.stub_system(function(cmd, _, on_exit)
+      local stdout = ""
+      if cmd[2] == "alias" then
+        stdout = table.concat({
+          "[default]    proj_spaced   ->   1000/2000 (Spacing)",
+          "proj_plain->1001/2001 (No profile)",
+          "7 proj_legacy Legacy format entry",
+          "badline",
+          "",
+        }, "\n")
+      end
+      on_exit({ code = 0, stdout = stdout })
+      return { kill = function() end }
+    end)
+
+    taxi.setup({
+      aliases = { auto_update = true, update_debounce_ms = 0, notify_on_update = false },
+      commands = { timeout_ms = 0 },
+    })
+
+    taxi.update_now()
+
+    local matches = taxi.complete(0, "proj_")
+    assert.equals("proj_spaced", matches[1].word)
+    assert.equals("1000/2000 (Spacing)", matches[1].menu)
+    assert.equals("proj_plain", matches[2].word)
+    assert.equals("1001/2001 (No profile)", matches[2].menu)
+    assert.equals("proj_legacy", matches[3].word)
+    assert.equals("Legacy format entry", matches[3].menu)
+    assert.equals(nil, matches[4])
+  end)
+
+  it("deduplicates aliases and keeps first-seen order", function()
+    stubber.stub_executable(1)
+    stubber.stub_defer_immediate()
+    stubber.stub_system(function(cmd, _, on_exit)
+      local stdout = ""
+      if cmd[2] == "alias" then
+        stdout = table.concat({
+          "[default] alpha -> First alpha",
+          "[default] beta -> First beta",
+          "[default] alpha -> Second alpha",
+          "[default] gamma -> First gamma",
+          "[default] beta -> Second beta",
+        }, "\n")
+      end
+      on_exit({ code = 0, stdout = stdout })
+      return { kill = function() end }
+    end)
+
+    taxi.setup({
+      aliases = { auto_update = true, update_debounce_ms = 0, notify_on_update = false },
+      commands = { timeout_ms = 0 },
+    })
+
+    taxi.update_now()
+
+    local matches = taxi.complete(0, "")
+    assert.equals("alpha", matches[1].word)
+    assert.equals("First alpha", matches[1].menu)
+    assert.equals("beta", matches[2].word)
+    assert.equals("First beta", matches[2].menu)
+    assert.equals("gamma", matches[3].word)
+    assert.equals("First gamma", matches[3].menu)
+    assert.equals(nil, matches[4])
+  end)
+
   it("writes and reads alias cache", function()
     local tmpdir = vim.fn.tempname()
     vim.fn.mkdir(tmpdir, "p")

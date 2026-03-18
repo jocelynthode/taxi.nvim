@@ -8,7 +8,40 @@ local state = {
   job_id = nil,
   seq = 0,
   inflight = false,
+  scratch_bufnr = nil,
 }
+
+---@return integer
+local function get_or_create_scratch_buf()
+  if state.scratch_bufnr and vim.api.nvim_buf_is_valid(state.scratch_bufnr) then
+    return state.scratch_bufnr
+  end
+
+  local buf = vim.api.nvim_create_buf(false, true)
+  state.scratch_bufnr = buf
+  vim.api.nvim_buf_set_name(buf, "_taxibalance")
+  vim.bo[buf].buftype = "nofile"
+  vim.bo[buf].bufhidden = "wipe"
+  vim.bo[buf].buflisted = false
+  vim.bo[buf].swapfile = false
+  vim.bo[buf].modifiable = true
+  return buf
+end
+
+---@param buf integer
+---@return integer
+local function ensure_scratch_window(buf)
+  local winid = vim.fn.bufwinid(buf)
+  if winid ~= -1 and vim.api.nvim_win_is_valid(winid) then
+    return winid
+  end
+
+  vim.cmd("belowright 7split")
+  winid = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(winid, buf)
+  vim.wo[winid].wrap = false
+  return winid
+end
 
 ---Show the current taxi balance using notify or scratch mode.
 function M.show_balance()
@@ -56,26 +89,13 @@ function M.show_balance()
         return
       end
 
-      local winnr = vim.fn.bufwinnr("^_taxibalance$")
-      local buf
-
-      if winnr > 0 then
-        vim.cmd(winnr .. "wincmd w")
-        buf = vim.api.nvim_get_current_buf()
-        vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
-      else
-        vim.cmd("belowright 7new _taxibalance")
-        buf = vim.api.nvim_get_current_buf()
-        vim.bo[buf].buftype = "nofile"
-        vim.bo[buf].bufhidden = "wipe"
-        vim.bo[buf].buflisted = false
-        vim.bo[buf].swapfile = false
-        vim.bo[buf].modifiable = true
-        vim.wo[0].wrap = false
-      end
-
+      local prev_win = vim.api.nvim_get_current_win()
+      local buf = get_or_create_scratch_buf()
+      local winid = ensure_scratch_window(buf)
       vim.api.nvim_buf_set_lines(buf, 0, -1, false, balance)
-      vim.cmd("wincmd k")
+      if vim.api.nvim_win_is_valid(prev_win) and prev_win ~= winid then
+        vim.api.nvim_set_current_win(prev_win)
+      end
     end,
     on_timeout = function()
       if seq ~= state.seq then
@@ -103,11 +123,20 @@ function M.balance_close()
   if config.get().balance.mode == "notify" then
     return
   end
-  local winnr = vim.fn.bufwinnr("^_taxibalance$")
-  if winnr > 0 then
-    vim.cmd(winnr .. "wincmd w")
-    vim.cmd("wincmd q")
+
+  local bufnr = state.scratch_bufnr
+  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+    bufnr = vim.fn.bufnr("^_taxibalance$")
   end
+
+  if bufnr and bufnr > 0 then
+    local winid = vim.fn.bufwinid(bufnr)
+    if winid ~= -1 and vim.api.nvim_win_is_valid(winid) then
+      pcall(vim.api.nvim_win_close, winid, true)
+    end
+  end
+
+  state.scratch_bufnr = nil
 end
 
 ---Report whether the balance command is running.
