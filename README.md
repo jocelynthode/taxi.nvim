@@ -34,6 +34,21 @@ Install with your plugin manager of choice:
 use({ "jocelynthode/taxi.nvim", ft = "taxi" })
 ```
 
+```nix
+# Nixvim
+programs.nixvim.extraPlugins = [
+  (pkgs.vimUtils.buildVimPlugin {
+    name = "taxi";
+    src = pkgs.fetchFromGitHub {
+      owner = "jocelynthode";
+      repo = "taxi.nvim";
+      rev = "0d69e8bfcfd91f0f410a341205dde67bfb139ada";
+      hash = "sha256-5vLViwGGyYX/+nYc4WmqfuYOdv/ZPYFIZ2jW9ShUZ5Y=";
+    };
+  })
+];
+```
+
 ## Usage
 
 Open a `.tks` file. The plugin:
